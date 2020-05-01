@@ -24,7 +24,7 @@ func NewDatabase() *Database {
 	}
 
 	db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte("prevents"))
+		_, err := tx.CreateBucketIfNotExists([]byte("commentevents"))
 		if err != nil {
 			return fmt.Errorf("create bucket: %s", err)
 		}
@@ -32,7 +32,7 @@ func NewDatabase() *Database {
 	})
 
 	db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte("commentevents"))
+		_, err := tx.CreateBucketIfNotExists([]byte("prevents"))
 		if err != nil {
 			return fmt.Errorf("create bucket: %s", err)
 		}
