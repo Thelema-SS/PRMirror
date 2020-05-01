@@ -24,7 +24,15 @@ func NewDatabase() *Database {
 	}
 
 	db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte("events"))
+		_, err := tx.CreateBucketIfNotExists([]byte("prevents"))
+		if err != nil {
+			return fmt.Errorf("create bucket: %s", err)
+		}
+		return nil
+	})
+
+	db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte("commentevents"))
 		if err != nil {
 			return fmt.Errorf("create bucket: %s", err)
 		}
@@ -97,8 +105,8 @@ func (d *Database) btoi(v []byte) int {
 	return int(binary.BigEndian.Uint64(v))
 }
 
-// AddEvent add event to DB
-func (d *Database) AddEvent(eventIDStr string) error {
+// AddPrEvent add pr event to DB
+func (d *Database) AddPrEvent(eventIDStr string) error {
 	eventID, err := strconv.ParseInt(eventIDStr, 10, 64)
 	if err != nil {
 		panic(err)
@@ -108,7 +116,26 @@ func (d *Database) AddEvent(eventIDStr string) error {
 
 	// Store the event id
 	d.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("events"))
+		b := tx.Bucket([]byte("prevents"))
+		err := b.Put(eventIDBytes, d.itob(1))
+		return err
+	})
+
+	return nil
+}
+
+// AddCommentEvent add comment event to DB
+func (d *Database) AddCommentEvent(eventIDStr string) error {
+	eventID, err := strconv.ParseInt(eventIDStr, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	eventIDBytes := d.itob(int(eventID))
+
+	// Store the event id
+	d.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("commentevents"))
 		err := b.Put(eventIDBytes, d.itob(1))
 		return err
 	})
@@ -157,14 +184,29 @@ func (d *Database) GetID(bucket string, id int) (int, error) {
 	return val, nil
 }
 
-// SeenEvent have we seen this event before
-func (d *Database) SeenEvent(eventIDStr string) (bool, error) {
+// SeenPrEvent have we seen this event before
+func (d *Database) SeenPrEvent(eventIDStr string) (bool, error) {
 	eventID, err := strconv.ParseInt(eventIDStr, 10, 64)
 	if err != nil {
 		panic("wat")
 	}
 
-	val, err := d.GetID("events", int(eventID))
+	val, err := d.GetID("prevents", int(eventID))
+	if val == 1 {
+		return true, err
+	}
+
+	return false, err
+}
+
+// SeenCommentEvent have we seen this event before
+func (d *Database) SeenCommentEvent(eventIDStr string) (bool, error) {
+	eventID, err := strconv.ParseInt(eventIDStr, 10, 64)
+	if err != nil {
+		panic("wat")
+	}
+
+	val, err := d.GetID("commentevents", int(eventID))
 	if val == 1 {
 		return true, err
 	}
