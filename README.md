@@ -6,6 +6,7 @@ I recommend using it over the original HippieStation repository.
 ## Getting started
 - This is best off done on a fresh repository as it's likely that you have lots of modified upstream code. We did this for our latest branch https://github.com/HippieStation/HippieStation - We try to maintain modular code by using an additional folder for all of our code: https://github.com/HippieStation/HippieStation/tree/master/hippiestation
 - Compile the code by running `go get` and then `go build`
+- Make sure jq, curl and git are all installed on your system and in your PATH.
 - Copy the following file into your repository [merge-upstream-pull-request.sh](https://raw.githubusercontent.com/austation/austation/master/austation/tools/merge-upstream-pull-request.sh)
 - Make sure that `merge-upstream-pull-request.sh` is marked as executable (`chmod +x merge-upstream-pull-request.sh`)
 - Clone the repo to disk
