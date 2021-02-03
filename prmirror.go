@@ -112,7 +112,13 @@ func (p PRMirror) HandlePRComment(prComment *github.IssueCommentEvent) {
 
 	comment := prComment.GetComment()
 	rank := comment.GetAuthorAssociation()
-	if (rank == "COLLABORATOR" || rank == "MEMBER" || rank == "OWNER") && strings.HasPrefix(comment.GetBody(), "remirror") {
+	if !(rank == "COLLABORATOR" || rank == "MEMBER" || rank == "OWNER") {
+		return
+	}
+
+	body := comment.GetBody()
+
+	if strings.HasPrefix(body, "remirror") {
 		id := prComment.GetIssue().GetNumber()
 		pr, _, err := p.GitHubClient.PullRequests.Get(*p.Context, p.Configuration.DownstreamOwner, p.Configuration.DownstreamRepo, id)
 		if err != nil {
@@ -138,6 +144,31 @@ func (p PRMirror) HandlePRComment(prComment *github.IssueCommentEvent) {
 		if err != nil {
 			log.Errorf("Error while remirroring PR: %s\n", err.Error())
 		}
+	} else if strings.HasPrefix(body, "domirror") {
+		// Split into pieces and grab the second arg
+		pieces := strings.Split(body, " ")
+		if !(len(pieces) == 2) {
+			log.Errorf("Incorrect number of arguments while mirroring custom PR id")
+			return
+		}
+
+		id, err := strconv.Atoi(pieces[1])
+		if err != nil {
+			log.Errorf("Error while parsing comment body, incorrect format: %s\n", err.Error())
+			return
+		}
+
+		pr, _, err := p.GitHubClient.PullRequests.Get(*p.Context, p.Configuration.UpstreamOwner, p.Configuration.UpstreamRepo, id)
+		if err != nil {
+			log.Errorf("Error while getting upstream PR to mirror: %s\n", err.Error())
+			return
+		}
+
+		_, err = p.MirrorPR(pr)
+		if err != nil {
+			log.Errorf("Error while mirroring PR: %s\n", err.Error())
+		}
+
 	}
 }
 
