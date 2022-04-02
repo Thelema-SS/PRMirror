@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -233,12 +234,25 @@ func (p PRMirror) MirrorPR(pr *github.PullRequest) (int, error) {
 
 	log.Infof("Mirroring PR [%d]: %s from %s\n", pr.GetNumber(), pr.GetTitle(), pr.User.GetLogin())
 
-	cmd := exec.Command(fmt.Sprintf("%s%s", p.Configuration.RepoPath, p.Configuration.ToolPath), strconv.Itoa(pr.GetNumber()), pr.GetTitle())
-	cmd.Dir = p.Configuration.RepoPath
-	cmdoutput, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Criticalf("Error while mirroring %d: %s\n", pr.GetNumber(), err)
-		return 0, err
+	var cmdoutput []byte = nil
+	switch runtime.GOOS {
+	case "linux":
+		cmd := exec.Command(fmt.Sprintf("%s%s", p.Configuration.RepoPath, p.Configuration.ToolPath), strconv.Itoa(pr.GetNumber()), pr.GetTitle())
+		cmd.Dir = p.Configuration.RepoPath
+		cmdoutput, err = cmd.CombinedOutput()
+		if err != nil {
+			log.Criticalf("Error while mirroring %d: %s\n", pr.GetNumber(), err)
+			return 0, err
+		}
+	case "windows":
+		ps, _ := exec.LookPath("powershell.exe")
+		cmd := exec.Command(ps, "-NoProfile -ExecutionPolicy Bypass -File", fmt.Sprintf("%s%s", p.Configuration.RepoPath, p.Configuration.ToolPath), strconv.Itoa(pr.GetNumber()), pr.GetTitle())
+		cmd.Dir = p.Configuration.RepoPath
+		cmdoutput, err = cmd.CombinedOutput()
+		if err != nil {
+			log.Criticalf("Error while mirroring %d: %s\n", pr.GetNumber(), err)
+			return 0, err
+		}
 	}
 
 	logpath := fmt.Sprintf("./logs/upstream-merge-%d.log", pr.GetNumber())
