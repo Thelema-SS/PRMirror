@@ -246,7 +246,7 @@ func (p PRMirror) MirrorPR(pr *github.PullRequest) (int, error) {
 		}
 	case "windows":
 		ps, _ := exec.LookPath("powershell.exe")
-		cmd := exec.Command(fmt.Sprintf("%s -NoProfile -ExecutionPolicy Bypass -File %s%s %d %s", ps, p.Configuration.RepoPath, p.Configuration.ToolPath, pr.GetNumber(), pr.GetTitle()))
+		cmd := exec.Command(ps, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", fmt.Sprintf("%s%s", p.Configuration.RepoPath, p.Configuration.ToolPath), strconv.Itoa(pr.GetNumber()), pr.GetTitle())
 		cmd.Dir = p.Configuration.RepoPath
 		cmdoutput, err = cmd.CombinedOutput()
 		if err != nil {
