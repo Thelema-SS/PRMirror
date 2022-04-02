@@ -241,7 +241,7 @@ func (p PRMirror) MirrorPR(pr *github.PullRequest) (int, error) {
 		cmd.Dir = p.Configuration.RepoPath
 		cmdoutput, err = cmd.CombinedOutput()
 		if err != nil {
-			log.Criticalf("Error while mirroring %d: %s\n", pr.GetNumber(), err)
+			log.Criticalf("Error while mirroring %d: %s\n details: %s", pr.GetNumber(), err, cmdoutput)
 			return 0, err
 		}
 	case "windows":
@@ -250,7 +250,7 @@ func (p PRMirror) MirrorPR(pr *github.PullRequest) (int, error) {
 		cmd.Dir = p.Configuration.RepoPath
 		cmdoutput, err = cmd.CombinedOutput()
 		if err != nil {
-			log.Criticalf("Error while mirroring %d: %s\n", pr.GetNumber(), err)
+			log.Criticalf("Error while mirroring %d: %s\n details: %s", pr.GetNumber(), err, cmdoutput)
 			return 0, err
 		}
 	}
