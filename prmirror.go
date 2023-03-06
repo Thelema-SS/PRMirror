@@ -262,7 +262,17 @@ func (p PRMirror) MirrorPR(pr *github.PullRequest) (int, error) {
 	base := "master"
 	head := fmt.Sprintf("upstream-merge-%d", pr.GetNumber())
 	maintainerCanModify := true // We are the owner of the PR so we can specify this as true
-	title := fmt.Sprintf("[MIRROR] %s", pr.GetTitle())
+	//Downstream of downstream custom.
+	titleText := pr.GetTitle()
+	tag := ""
+	if regexp.MustCompile(`(?i)(\[MIRROR\]( ?))w*`).MatchString(titleText) {
+		tag = "TG"
+		titleText = regexp.MustCompile(`(?i)(\[MIRROR\] ?)`).ReplaceAllString(titleText, "")
+	} else {
+		tag = "SKYRAT"
+	}
+	//Downstream of downstream custom END.
+	title := fmt.Sprintf("[%s MIRROR] %s", tag, titleText)// ^^^^^^^^^^^^^
 	body := fmt.Sprintf("Original PR: %s\n--------------------\n%s", pr.GetHTMLURL(), strings.Replace(pr.GetBody(), "@", "@ ", -1))
 	re := regexp.MustCompile(`(?i)\b((fix(|es|ed))|(close(|s|d))|(resolve(|s|d)))\s#\d+\b`)
 	body = re.ReplaceAllString(body, "[issue link stripped]")
